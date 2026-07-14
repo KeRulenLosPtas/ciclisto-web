@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ciclisto Draft - Sorteos en Tiempo Real</title>
+  <!-- Google Fonts: Outfit & Outfit Bold -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background glow effects -->
+  <div class="glow-bg">
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+  </div>
+
+  <div id="app" class="app-container">
+    
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen" class="screen active">
+      <div class="login-card glass-panel">
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 24 24" width="48" height="48">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                  d="M5.5 17a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm13 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 5h3m-3 0v4m-3.5 8 2.5-4h5.5l2.5 4M12 9l-4 4h8l-4-4Z"/>
+          </svg>
+          <h1>Ciclisto <span class="accent-text">Light</span></h1>
+          <p class="subtitle">Sorteo de corredores en tiempo real</p>
+        </div>
+        
+        <form id="login-form">
+          <div class="form-group">
+            <label for="input-name">Nombre Completo</label>
+            <input type="text" id="input-name" placeholder="Ej. Alberto García" required autocomplete="name">
+          </div>
+          
+          <div class="form-group">
+            <label for="input-pseudonym">Seudónimo (Usuario)</label>
+            <input type="text" id="input-pseudonym" placeholder="Ej. AGG" required maxlength="12" pattern="^[a-zA-Z0-9_\-]+$" title="Solo letras, números, guiones y barras bajas.">
+            <small class="help-text">Será tu identificador único en la partida</small>
+          </div>
+          
+          <button type="submit" class="btn-primary">Entrar a la Carrera</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== GAME LAYOUT (LOBBY / PLAYING / FINISHED) ==================== -->
+    <div id="main-layout" class="screen">
+      
+      <!-- LEFT SIDEBAR: PLAYERS LIST -->
+      <aside class="sidebar left-sidebar glass-panel">
+        <div class="sidebar-header">
+          <h2>Participantes</h2>
+          <span id="player-count-badge" class="badge">0</span>
+        </div>
+        
+        <div id="players-list" class="players-list-container">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div id="director-controls" class="admin-controls-panel hidden">
+          <h3>Controles de Director</h3>
+          <div class="admin-buttons">
+            <button id="btn-force-auto" class="btn-secondary" title="Fuerza una selección aleatoria para el turno activo">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Auto-pick Turno
+            </button>
+            <button id="btn-reset-game" class="btn-danger" title="Reinicia el sorteo actual y vuelve al lobby">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8m0 0V2m0 6h-6M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v6m0-6h6"/></svg>
+              Reiniciar Sorteo
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER PANEL: BOARD / LOBBY CONFIG / RESULTS -->
+      <main class="main-content-panel">
+        
+        <!-- STATUS HEAD / TOUR THEME BAR -->
+        <header id="game-header" class="game-status-header glass-panel">
+          <div class="status-info">
+            <h1 id="competition-title">Sorteo Ciclismo</h1>
+            <p id="game-phase-label" class="subtitle">FASE 1: GREGARIOS Y ESPECIALES</p>
+          </div>
+          <div id="active-turn-banner" class="turn-banner">
+            <span class="pulse-dot"></span>
+            <span id="turn-text">Esperando inicio...</span>
+            <span id="specials-badge" class="specials-badge hidden"></span>
+          </div>
+        </header>
+
+        <div class="center-content-wrapper">
+          
+          <!-- LOBBY SCREEN -->
+          <div id="lobby-view" class="view-panel active">
+            <!-- HOST CONFIG PANEL -->
+            <div id="host-config-panel" class="config-container glass-panel hidden">
+              <h2>Opciones de Creación del Sorteo</h2>
+              <form id="config-form">
+                <div class="config-grid">
+                  <div class="form-group">
+                    <label for="select-competition">Competición</label>
+                    <select id="select-competition">
+                      <!-- Loaded dynamically -->
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="input-teams">Número de Equipos</label>
+                    <input type="number" id="input-teams" min="1" max="100" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="input-components">Componentes por Equipo</label>
+                    <input type="number" id="input-components" min="1" max="50" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="select-phases">Fases de Sorteo</label>
+                    <select id="select-phases">
+                      <option value="1">1 Fase (Todo junto)</option>
+                      <option value="2">2 Fases (1: Gregarios, 2: Jefes Fila)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-check-group">
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="check-multi10" checked>
+                    <span class="checkmark"></span>
+                    Quitar múltiplos de 10 (ej. 10, 20, 30...)
+                  </label>
+                </div>
+
+                <div class="config-accordion-section">
+                  <h3>Exclusiones y Añadidos</h3>
+                  <div class="config-grid">
+                    <div class="form-group">
+                      <label for="input-exclusions">Exclusiones (Dorsales separados por comas)</label>
+                      <input type="text" id="input-exclusions" placeholder="Ej. 13, 44, 71">
+                    </div>
+
+                    <div class="form-group">
+                      <label for="input-additions">Añadidos (Dorsales separados por comas)</label>
+                      <input type="text" id="input-additions" placeholder="Ej. 201, 202">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="config-accordion-section">
+                  <h3>Elementos Especiales (Apariciones)</h3>
+                  <div class="specials-config-grid">
+                    <div class="form-group inline-group">
+                      <label for="special-capullo">🥀 Capullo</label>
+                      <input type="number" id="special-capullo" min="0" max="20" value="4">
+                    </div>
+                    <div class="form-group inline-group">
+                      <label for="special-capullon">🌹 Capullón</label>
+                      <input type="number" id="special-capullon" min="0" max="20" value="1">
+                    </div>
+                    <div class="form-group inline-group">
+                      <label for="special-torpe">🐌 Torpe</label>
+                      <input type="number" id="special-torpe" min="0" max="20" value="4">
+                    </div>
+                    <div class="form-group inline-group">
+                      <label for="special-torpon">🐢 Torpón</label>
+                      <input type="number" id="special-torpon" min="0" max="20" value="1">
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-primary start-game-btn">Comenzar Sorteo</button>
+              </form>
+            </div>
+
+            <!-- GUEST WAITING PANEL -->
+            <div id="guest-waiting-panel" class="waiting-container glass-panel">
+              <div class="loader-cycling">
+                <svg class="bike-animation" viewBox="0 0 100 100" width="100" height="100">
+                  <circle cx="25" cy="70" r="15" fill="none" stroke="currentColor" stroke-width="4"/>
+                  <circle cx="75" cy="70" r="15" fill="none" stroke="currentColor" stroke-width="4"/>
+                  <path fill="none" stroke="currentColor" stroke-width="4" d="M25 70h25l10-25M50 70l15-40M75 70l-10-25M40 30h25M50 45h15"/>
+                </svg>
+              </div>
+              <h2>Esperando al Director...</h2>
+              <p>El Director de juego está configurando las opciones del sorteo.</p>
+              
+              <div class="waiting-summary-card">
+                <h3>Detalles de la Carrera Seleccionada</h3>
+                <ul class="summary-details">
+                  <li><strong>Carrera:</strong> <span id="summary-comp">Cargando...</span></li>
+                  <li><strong>Equipos:</strong> <span id="summary-teams">-</span></li>
+                  <li><strong>Componentes:</strong> <span id="summary-components">-</span></li>
+                  <li><strong>Fases:</strong> <span id="summary-phases">-</span></li>
+                  <li><strong>Múltiplos de 10:</strong> <span id="summary-multi10">-</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLAYING VIEW / BOARD GRID -->
+          <div id="playing-view" class="view-panel">
+            <div id="board-grid" class="cards-grid">
+              <!-- Cards generated dynamically -->
+            </div>
+          </div>
+
+          <!-- RESULTS VIEW -->
+          <div id="results-view" class="view-panel glass-panel">
+            <div class="results-celebration">
+              <svg viewBox="0 0 24 24" width="64" height="64" class="trophy-icon">
+                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34M12 2a5 5 0 0 0-5 5v3c0 2.4 1.76 4.38 4.08 4.79.6.1 1.24.1 1.84 0A4.98 4.98 0 0 0 17 10V7a5 5 0 0 0-5-5Z"/>
+              </svg>
+              <h2>¡El Sorteo ha Concluido!</h2>
+              <p>Aquí tienes el resumen definitivo de los corredores asignados a cada participante.</p>
+            </div>
+
+            <div id="results-tables-container" class="results-grid">
+              <!-- Generated dynamically -->
+            </div>
+
+            <div class="results-footer-actions">
+              <button id="btn-export-csv" class="btn-primary">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Descargar Resultados (CSV)
+              </button>
+              <button id="btn-host-restart" class="btn-secondary hidden">Crear Nuevo Sorteo</button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- RIGHT SIDEBAR: CHAT & LOGS -->
+      <aside class="sidebar right-sidebar glass-panel">
+        <div class="sidebar-header">
+          <h2>Chat y Actividad</h2>
+        </div>
+        
+        <div id="chat-logs-container" class="chat-logs-area">
+          <!-- Live chat messages and system logs -->
+        </div>
+
+        <form id="chat-form" class="chat-input-panel">
+          <input type="text" id="chat-input" placeholder="Escribe un mensaje..." required autocomplete="off">
+          <button type="submit" class="btn-send">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Client JavaScript dependencies -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
