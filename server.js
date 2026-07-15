@@ -568,6 +568,29 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Director removes a player
+  socket.on('removePlayer', (pseudonymToRemove) => {
+    const hostPlayer = gameState.players.find(p => p.socketId === socket.id);
+    if (!hostPlayer || hostPlayer.role !== 'director') return;
+
+    const playerIndex = gameState.players.findIndex(p => p.pseudonym.toLowerCase() === pseudonymToRemove.toLowerCase());
+    if (playerIndex === -1) return;
+
+    const removedPlayer = gameState.players[playerIndex];
+    gameState.players.splice(playerIndex, 1);
+
+    addLog(`${removedPlayer.name} (@${removedPlayer.pseudonym}) ha sido eliminado por el Director.`, 'system');
+
+    // Broadcast updated player list
+    io.emit('playersUpdate', gameState.players.map(p => ({
+      name: p.name,
+      pseudonym: p.pseudonym,
+      active: p.active,
+      role: p.role,
+      chosen: p.chosen
+    })));
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
     const player = gameState.players.find(p => p.socketId === socket.id);
