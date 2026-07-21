@@ -186,26 +186,27 @@ function generateItems(config) {
 }
 
 // Check if all active players have reached the limit of runners in Phase 1
+// Reemplaza la función checkPhase1Equality existente
 function checkPhase1Equality() {
   if (gameState.config.phases !== 2) return false;
 
-  // Total gregarios in Phase 1
-  const totalPhase1Gregarios = gameState.board.filter(item => item.type === 'gregario').length;
-  const activePlayersCount = gameState.players.filter(p => p.active).length;
-  if (activePlayersCount === 0) return false;
+  const activePlayers = gameState.players.filter(p => p.active);
+  if (activePlayers.length === 0) return false;
 
-  const maxGregariosPerPlayer = Math.floor(totalPhase1Gregarios / activePlayersCount);
-  
-  // Check if every active player has at least maxGregariosPerPlayer gregarios
-  for (let player of gameState.players) {
-    if (!player.active) continue;
-    // Count how many gregarios they have
-    const gregariosCount = player.chosen.filter(item => getRiderType(item.dorsal) === 'gregario').length;
-    if (gregariosCount < maxGregariosPerPlayer) {
-      return false; // at least one player has not reached the max limit
-    }
-  }
-  return true;
+  const totalPhase1Gregarios = gameState.board.filter(item => 
+    !item.discovered && item.type === 'gregario'
+  ).length; // Solo los NO revelados cuentan para la igualdad futura
+
+  // Mejor: verificar si todos los jugadores tienen la misma cantidad de gregarios (redondeo)
+  const gregariosPorJugador = activePlayers.map(player => {
+    return player.chosen.filter(item => getRiderType(item.dorsal) === 'gregario').length;
+  });
+
+  const minGregarios = Math.min(...gregariosPorJugador);
+  const maxGregarios = Math.max(...gregariosPorJugador);
+
+  // Si todos tienen la misma cantidad (o diferencia de 1) y ya se han repartido suficientes
+  return maxGregarios - minGregarios <= 1 && minGregarios > 0;
 }
 
 // Transition from Phase 1 to Phase 2
@@ -363,6 +364,12 @@ function handleItemSelection(cardIndex, pseudonym) {
       type: item.type,
       label: `(${getRiderTypeStr(item.type)})`
     });
+    // Dentro de handleItemSelection, después de player.chosen.push(...)
+console.log('Checking phase transition...'); // para debug
+if (gameState.phase === 1 && checkPhase1Equality()) {
+  transitionToPhase2();
+  return;
+}
 
     // Broadcast board reveal
     io.emit('cardRevealed', {
