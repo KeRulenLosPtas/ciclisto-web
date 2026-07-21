@@ -57,6 +57,56 @@ const summaryComponents = document.getElementById('summary-components');
 const summaryPhases = document.getElementById('summary-phases');
 const summaryMulti10 = document.getElementById('summary-multi10');
 
+// Mobile elements
+const isMobile = window.innerWidth <= 768;
+let currentView = 'lobby';
+
+// Mobile panel elements
+const mobilePlayersPanel = document.getElementById('mobile-players-panel');
+const mobileChatPanel = document.getElementById('mobile-chat-panel');
+const mobilePlayersList = document.getElementById('mobile-players-list');
+const mobilePlayerCountBadge = document.getElementById('mobile-player-count-badge');
+const mobileClosePlayers = document.getElementById('mobile-close-players');
+const mobileCloseChat = document.getElementById('mobile-close-chat');
+const mobileChatLogsContainer = document.getElementById('mobile-chat-logs-container');
+const mobileChatForm = document.getElementById('mobile-chat-form');
+const mobileChatInput = document.getElementById('mobile-chat-input');
+
+// Mobile toggle buttons
+const btnTogglePlayers = document.getElementById('btn-toggle-players');
+const btnToggleChat = document.getElementById('btn-toggle-chat');
+
+// Mobile turn info
+const mobileCurrentTurn = document.getElementById('mobile-current-turn');
+const mobileLastTurn = document.getElementById('mobile-last-turn');
+const mobileTurnBanner = document.getElementById('mobile-turn-banner');
+const mobileTurnText = document.getElementById('mobile-turn-text');
+const mobileSpecialsBadge = document.getElementById('mobile-specials-badge');
+const mobileCompetitionTitle = document.getElementById('mobile-competition-title');
+
+// Mobile config elements
+const mobileHostConfigPanel = document.getElementById('mobile-host-config-panel');
+const mobileSelectCompetition = document.getElementById('mobile-select-competition');
+const mobileInputTeams = document.getElementById('mobile-input-teams');
+const mobileInputComponents = document.getElementById('mobile-input-components');
+const mobileSelectPhases = document.getElementById('mobile-select-phases');
+const mobileCheckMulti10 = document.getElementById('mobile-check-multi10');
+const mobileInputExclusions = document.getElementById('mobile-input-exclusions');
+const mobileInputAdditions = document.getElementById('mobile-input-additions');
+const mobileSpecialCapullo = document.getElementById('mobile-special-capullo');
+const mobileSpecialCapullon = document.getElementById('mobile-special-capullon');
+const mobileSpecialTorpe = document.getElementById('mobile-special-torpe');
+const mobileSpecialTorpon = document.getElementById('mobile-special-torpon');
+const mobileConfigForm = document.getElementById('mobile-config-form');
+
+// Mobile director controls
+const mobileDirectorControls = document.getElementById('mobile-director-controls');
+const mobileBtnForceAuto = document.getElementById('mobile-btn-force-auto');
+const mobileBtnResetGame = document.getElementById('mobile-btn-reset-game');
+const mobileDirectorControlsPanel = document.getElementById('mobile-director-controls-panel');
+const mobileBtnForceAuto2 = document.getElementById('mobile-btn-force-auto-2');
+const mobileBtnResetGame2 = document.getElementById('mobile-btn-reset-game-2');
+
 // Local user state
 let me = null; // player object
 let myPseudonym = '';
@@ -65,6 +115,7 @@ let currentTurnIndex = 0;
 let defaultCompetitions = [];
 let localConfig = {};
 let accumulatedSpecials = '';
+let lastTurnInfo = { user: '', dorsal: '' };
 
 // ==================== WEB AUDIO SYNTH EFFECTS ====================
 const soundEffects = {
@@ -168,7 +219,7 @@ function getIconSvg(type) {
     case 'gregario':
       return `<svg class="card-front-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M15 6h3m-3 0v4m-3.5 7.5 2.5-4.5h5.5l2.5 4.5M12 9.5l-4 4.5h8l-4-4.5z"/></svg>`;
     case 'capullo':
-      return `<span style="font-size: 20px;">🥀</span>`;
+      return `<span style="font-size: 20px;">🪐</span>`;
     case 'capullon':
       return `<span style="font-size: 24px;">🌹</span>`;
     case 'torpe':
@@ -226,21 +277,35 @@ socket.on('initLobby', (data) => {
       opt.value = comp.id;
       opt.textContent = comp.name;
       selectCompetition.appendChild(opt);
+      
+      // Also populate mobile select
+      const mobileOpt = document.createElement('option');
+      mobileOpt.value = comp.id;
+      mobileOpt.textContent = comp.name;
+      mobileSelectCompetition.appendChild(mobileOpt);
     });
   }
 
   // Set values
   selectCompetition.value = localConfig.competitionId;
+  mobileSelectCompetition.value = localConfig.competitionId;
   updateAppTheme(localConfig.competitionId);
   syncConfigInputs(localConfig);
+  syncMobileConfigInputs(localConfig);
 
   // Set players list
   updatePlayersUI(data.players);
+  updateMobilePlayersUI(data.players);
 
   // Load chat log
   chatLogsContainer.innerHTML = '';
-  data.log.forEach(entry => appendLogToUI(entry));
+  mobileChatLogsContainer.innerHTML = '';
+  data.log.forEach(entry => {
+    appendLogToUI(entry);
+    appendMobileLogToUI(entry);
+  });
   scrollLogsToBottom();
+  scrollMobileLogsToBottom();
 
   if (data.status !== 'LOBBY' && data.gameState) {
     currentTurnOrder = data.gameState.turnOrder;
@@ -248,6 +313,7 @@ socket.on('initLobby', (data) => {
     accumulatedSpecials = data.gameState.accumulatedSpecials;
     renderBoard(data.gameState.board);
     updateTurnBannerUI();
+    updateMobileTurnInfo();
     
     if (data.status === 'FINISHED' && data.finishedResults) {
       displayFinalResults(data.finishedResults);
@@ -260,6 +326,7 @@ socket.on('initLobby', (data) => {
 socket.on('configUpdated', (config) => {
   localConfig = config;
   syncConfigInputs(config);
+  syncMobileConfigInputs(config);
   updateAppTheme(config.competitionId);
 });
 
@@ -275,17 +342,28 @@ socket.on('joinSuccess', ({ player, isReconnection }) => {
     hostConfigPanel.classList.remove('hidden');
     guestWaitingPanel.classList.add('hidden');
     btnHostRestart.classList.remove('hidden');
+    
+    // Mobile
+    mobileDirectorControls.classList.remove('hidden');
+    mobileHostConfigPanel.classList.remove('hidden');
+    mobileDirectorControlsPanel.classList.remove('hidden');
   } else {
     directorControls.classList.add('hidden');
     hostConfigPanel.classList.add('hidden');
     guestWaitingPanel.classList.remove('hidden');
     btnHostRestart.classList.add('hidden');
+    
+    // Mobile
+    mobileDirectorControls.classList.add('hidden');
+    mobileHostConfigPanel.classList.add('hidden');
+    mobileDirectorControlsPanel.classList.add('hidden');
   }
 });
 
 // Players list update
 socket.on('playersUpdate', (players) => {
   updatePlayersUI(players);
+  updateMobilePlayersUI(players);
   
   // Update my role if changed (e.g. host disconnects, guest becomes host)
   const myPlayer = players.find(p => p.pseudonym === myPseudonym);
@@ -296,14 +374,25 @@ socket.on('playersUpdate', (players) => {
       hostConfigPanel.classList.remove('hidden');
       guestWaitingPanel.classList.add('hidden');
       btnHostRestart.classList.remove('hidden');
+      
+      // Mobile
+      mobileDirectorControls.classList.remove('hidden');
+      mobileHostConfigPanel.classList.remove('hidden');
+      mobileDirectorControlsPanel.classList.remove('hidden');
     } else {
       directorControls.classList.add('hidden');
       hostConfigPanel.classList.add('hidden');
       guestWaitingPanel.classList.remove('hidden');
       btnHostRestart.classList.add('hidden');
+      
+      // Mobile
+      mobileDirectorControls.classList.add('hidden');
+      mobileHostConfigPanel.classList.add('hidden');
+      mobileDirectorControlsPanel.classList.add('hidden');
     }
   }
   playerCountBadge.textContent = players.length;
+  mobilePlayerCountBadge.textContent = players.length;
 });
 
 // Game Started
@@ -314,6 +403,7 @@ socket.on('gameStarted', (data) => {
   gameStateUpdate('PLAYING');
   renderBoard(data.board);
   updateTurnBannerUI();
+  updateMobileTurnInfo();
   soundEffects.playSpecial(); // shiny chime to start
 });
 
@@ -322,12 +412,27 @@ socket.on('turnUpdate', (data) => {
   currentTurnIndex = data.currentTurnIndex;
   accumulatedSpecials = data.accumulatedSpecials;
   updateTurnBannerUI();
+  updateMobileTurnInfo();
+});
+
+// Card selection feedback - track last turn info
+socket.on('cardSelected', (data) => {
+  if (data.player && data.item) {
+    lastTurnInfo = {
+      user: data.player.pseudonym,
+      dorsal: data.item.dorsal > 10000 ? getRiderTypeStr(getRiderType(data.item.dorsal)) : data.item.dorsal,
+      name: data.player.name
+    };
+    updateMobileTurnInfo();
+  }
 });
 
 // Log entries
 socket.on('logUpdate', (entry) => {
   appendLogToUI(entry);
+  appendMobileLogToUI(entry);
   scrollLogsToBottom();
+  scrollMobileLogsToBottom();
 });
 
 // Card Flip update
@@ -349,6 +454,16 @@ socket.on('cardRevealed', (data) => {
     cardElem.classList.add('flipped');
   }
 
+  // Update last turn info
+  if (data.player) {
+    lastTurnInfo = {
+      user: data.player.pseudonym,
+      dorsal: data.item.dorsal > 10000 ? getRiderTypeStr(getRiderType(data.item.dorsal)) : data.item.dorsal,
+      name: data.player.name
+    };
+    updateMobileTurnInfo();
+  }
+
   // Play appropriate sound effect
   if (data.item.type === 'gregario' || data.item.type === 'jefefila') {
     soundEffects.playReveal();
@@ -358,6 +473,7 @@ socket.on('cardRevealed', (data) => {
 
   // Update players info (like drafted lists)
   updatePlayersUI(data.players);
+  updateMobilePlayersUI(data.players);
 });
 
 // Phase transitions (Fase 1 -> Fase 2)
@@ -368,6 +484,7 @@ socket.on('phaseTransition', (data) => {
   
   // Update phase indicator
   gamePhaseLabel.textContent = `FASE ${data.phase}: ELECCIÓN DE JEFES DE FILA`;
+  mobileCompetitionTitle.textContent = `FASE ${data.phase}: ELECCIÓN DE JEFES DE FILA`;
   
   // Re-draw board with transition
   boardGrid.style.opacity = 0;
@@ -375,6 +492,7 @@ socket.on('phaseTransition', (data) => {
     renderBoard(data.board);
     boardGrid.style.opacity = 1;
     updateTurnBannerUI();
+    updateMobileTurnInfo();
     soundEffects.playSpecial();
   }, 300);
 });
@@ -390,9 +508,13 @@ socket.on('gameReset', (data) => {
   gameStateUpdate('LOBBY');
   localConfig = data.config;
   syncConfigInputs(localConfig);
+  syncMobileConfigInputs(localConfig);
   updatePlayersUI(data.players);
+  updateMobilePlayersUI(data.players);
   boardGrid.innerHTML = '';
   accumulatedSpecials = '';
+  lastTurnInfo = { user: '', dorsal: '' };
+  updateMobileTurnInfo();
 });
 
 socket.on('errorMsg', (msg) => {
@@ -410,15 +532,21 @@ function gameStateUpdate(status) {
   if (status === 'LOBBY') {
     lobbyView.classList.add('active');
     gamePhaseLabel.textContent = 'CONFIGURACIÓN DE LA CARRERA';
+    mobileCompetitionTitle.textContent = 'Configuración de la Carrera';
     turnBanner.style.display = 'none';
+    mobileTurnBanner.style.display = 'none';
   } else if (status === 'PLAYING') {
     playingView.classList.add('active');
     gamePhaseLabel.textContent = 'FASE 1: GREGARIOS Y ESPECIALES';
+    mobileCompetitionTitle.textContent = 'FASE 1: GREGARIOS Y ESPECIALES';
     turnBanner.style.display = 'flex';
+    mobileTurnBanner.style.display = 'flex';
   } else if (status === 'FINISHED') {
     resultsView.classList.add('active');
     gamePhaseLabel.textContent = 'SORTEO COMPLETADO';
+    mobileCompetitionTitle.textContent = 'SORTEO COMPLETADO';
     turnBanner.style.display = 'none';
+    mobileTurnBanner.style.display = 'none';
   }
 }
 
@@ -448,6 +576,28 @@ function syncConfigInputs(config) {
     specialCapullon.value = config.specials[4] || 0;
     specialTorpe.value = config.specials[5] || 0;
     specialTorpon.value = config.specials[6] || 0;
+  }
+}
+
+// Sync mobile config inputs
+function syncMobileConfigInputs(config) {
+  const comp = defaultCompetitions.find(c => c.id === parseInt(config.competitionId));
+  const compName = comp ? comp.name : 'Personalizada';
+  mobileCompetitionTitle.textContent = compName;
+
+  // Form values
+  mobileInputTeams.value = config.teams;
+  mobileInputComponents.value = config.components;
+  mobileSelectPhases.value = config.phases;
+  mobileCheckMulti10.checked = config.quitarMultiplos10;
+  mobileInputExclusions.value = config.exclusions || '';
+  mobileInputAdditions.value = config.additions || '';
+  
+  if (config.specials) {
+    mobileSpecialCapullo.value = config.specials[3] || 0;
+    mobileSpecialCapullon.value = config.specials[4] || 0;
+    mobileSpecialTorpe.value = config.specials[5] || 0;
+    mobileSpecialTorpon.value = config.specials[6] || 0;
   }
 }
 
@@ -483,6 +633,38 @@ function updatePlayersUI(players) {
       ${chosenLabels ? `<div class="player-drafted-list"><strong>Asignados:</strong> ${chosenLabels}</div>` : ''}
     `;
     playersList.appendChild(playerCard);
+  });
+}
+
+// Update mobile players list
+function updateMobilePlayersUI(players) {
+  mobilePlayersList.innerHTML = '';
+  
+  const activePlayerPseudonym = currentTurnOrder[currentTurnIndex];
+  
+  players.forEach((p, idx) => {
+    const isMyTurn = activePlayerPseudonym === p.pseudonym;
+    const isMe = p.pseudonym === myPseudonym;
+    
+    const playerCard = document.createElement('div');
+    playerCard.className = `mobile-player-item ${isMyTurn ? 'active-turn' : ''} ${!p.active ? 'disconnected' : ''}`;
+    
+    const riderCount = p.chosen ? p.chosen.filter(item => item.type === 'gregario' || item.type === 'jefefila').length : 0;
+    
+    playerCard.innerHTML = `
+      <div class="mobile-player-info">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="player-status-dot"></span>
+          <span class="mobile-player-name">${p.name} ${isMe ? '<span style="color:var(--accent-color)">(Tú)</span>' : ''}</span>
+        </div>
+        <span class="mobile-player-pseudo">@${p.pseudonym}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <span class="mobile-player-count">${riderCount}</span>
+        <span class="player-role-badge ${p.role === 'director' ? 'director' : ''}">${p.role === 'director' ? 'Director' : 'Jugador'}</span>
+      </div>
+    `;
+    mobilePlayersList.appendChild(playerCard);
   });
 }
 
@@ -568,6 +750,45 @@ function updateTurnBannerUI() {
   }
 }
 
+// Update mobile turn info
+function updateMobileTurnInfo() {
+  const activePlayerPseudonym = currentTurnOrder[currentTurnIndex];
+  const isMyTurn = activePlayerPseudonym === myPseudonym;
+  
+  // Current turn
+  if (isMyTurn) {
+    mobileCurrentTurn.textContent = '¡Tú!';
+  } else {
+    mobileCurrentTurn.textContent = `@${activePlayerPseudonym || '...'}`;
+  }
+  
+  // Last turn info
+  if (lastTurnInfo.user) {
+    mobileLastTurn.textContent = `${lastTurnInfo.user}: ${lastTurnInfo.dorsal}`;
+  } else {
+    mobileLastTurn.textContent = '-';
+  }
+  
+  // Mobile turn banner
+  if (isMyTurn) {
+    mobileTurnText.textContent = '¡Es Tu Turno!';
+    mobileTurnBanner.style.borderColor = 'var(--accent-color)';
+    mobileTurnBanner.style.boxShadow = '0 0 10px var(--accent-glow)';
+  } else {
+    mobileTurnText.textContent = `Turno: @${activePlayerPseudonym || '...'}`;
+    mobileTurnBanner.style.borderColor = 'var(--panel-border)';
+    mobileTurnBanner.style.boxShadow = 'none';
+  }
+  
+  // Specials badge
+  if (accumulatedSpecials) {
+    mobileSpecialsBadge.textContent = `+${accumulatedSpecials}`;
+    mobileSpecialsBadge.classList.remove('hidden');
+  } else {
+    mobileSpecialsBadge.classList.add('hidden');
+  }
+}
+
 // Append logs/messages to sidebar
 function appendLogToUI(entry) {
   const entryDiv = document.createElement('div');
@@ -589,8 +810,33 @@ function appendLogToUI(entry) {
   chatLogsContainer.appendChild(entryDiv);
 }
 
+// Append logs to mobile chat
+function appendMobileLogToUI(entry) {
+  const entryDiv = document.createElement('div');
+  entryDiv.className = `log-entry ${entry.type}`;
+  
+  if (entry.type === 'chat') {
+    entryDiv.innerHTML = `
+      <span class="log-time">${entry.time}</span>
+      <span class="log-sender">${entry.sender}:</span>
+      <span class="log-text">${entry.text}</span>
+    `;
+  } else {
+    entryDiv.innerHTML = `
+      <span class="log-time">${entry.time}</span>
+      <span class="log-text">${entry.text}</span>
+    `;
+  }
+  
+  mobileChatLogsContainer.appendChild(entryDiv);
+}
+
 function scrollLogsToBottom() {
   chatLogsContainer.scrollTop = chatLogsContainer.scrollHeight;
+}
+
+function scrollMobileLogsToBottom() {
+  mobileChatLogsContainer.scrollTop = mobileChatLogsContainer.scrollHeight;
 }
 
 // Show results grid sheet
@@ -651,6 +897,28 @@ function exportResultsToCSV() {
   document.body.removeChild(link);
 }
 
+// ==================== MOBILE PANEL TOGGLES ====================
+
+function togglePlayersPanel() {
+  mobilePlayersPanel.classList.add('active');
+  btnTogglePlayers.classList.add('active');
+}
+
+function toggleChatPanel() {
+  mobileChatPanel.classList.add('active');
+  btnToggleChat.classList.add('active');
+}
+
+function closePlayersPanel() {
+  mobilePlayersPanel.classList.remove('active');
+  btnTogglePlayers.classList.remove('active');
+}
+
+function closeChatPanel() {
+  mobileChatPanel.classList.remove('active');
+  btnToggleChat.classList.remove('active');
+}
+
 // ==================== EVENT LISTENERS ====================
 
 // Login Form Submit
@@ -666,8 +934,58 @@ loginForm.addEventListener('submit', (e) => {
   }
 });
 
+// Mobile toggle buttons
+btnTogglePlayers.addEventListener('click', () => {
+  togglePlayersPanel();
+  soundEffects.playClick();
+});
+
+btnToggleChat.addEventListener('click', () => {
+  toggleChatPanel();
+  soundEffects.playClick();
+});
+
+// Mobile close buttons
+mobileClosePlayers.addEventListener('click', () => {
+  closePlayersPanel();
+  soundEffects.playClick();
+});
+
+mobileCloseChat.addEventListener('click', () => {
+  closeChatPanel();
+  soundEffects.playClick();
+});
+
+// Close panels when clicking outside
+mobilePlayersPanel.addEventListener('click', (e) => {
+  if (e.target === mobilePlayersPanel) {
+    closePlayersPanel();
+  }
+});
+
+mobileChatPanel.addEventListener('click', (e) => {
+  if (e.target === mobileChatPanel) {
+    closeChatPanel();
+  }
+});
+
 // Host selector change -> update configurations on server
 selectCompetition.addEventListener('change', (e) => {
+  const compId = parseInt(e.target.value);
+  const defaultComp = defaultCompetitions.find(c => c.id === compId);
+  if (defaultComp) {
+    const updated = {
+      competitionId: compId,
+      teams: defaultComp.teams,
+      components: defaultComp.components,
+      phases: defaultComp.phases
+    };
+    socket.emit('updateConfig', updated);
+  }
+});
+
+// Mobile host selector change
+mobileSelectCompetition.addEventListener('change', (e) => {
   const compId = parseInt(e.target.value);
   const defaultComp = defaultCompetitions.find(c => c.id === compId);
   if (defaultComp) {
@@ -714,6 +1032,38 @@ configInputs.forEach(input => {
   });
 });
 
+// Mobile config inputs
+const mobileConfigInputs = [mobileInputTeams, mobileInputComponents, mobileSelectPhases, mobileCheckMulti10, mobileInputExclusions, mobileInputAdditions, mobileSpecialCapullo, mobileSpecialCapullon, mobileSpecialTorpe, mobileSpecialTorpon];
+mobileConfigInputs.forEach(input => {
+  input.addEventListener('change', () => {
+    if (me && me.role === 'director') {
+      const config = {
+        competitionId: mobileSelectCompetition.value === '5' ? 5 : mobileSelectCompetition.value,
+        teams: parseInt(mobileInputTeams.value),
+        components: parseInt(mobileInputComponents.value),
+        phases: parseInt(mobileSelectPhases.value),
+        quitarMultiplos10: mobileCheckMulti10.checked,
+        exclusions: mobileInputExclusions.value,
+        additions: mobileInputAdditions.value,
+        specials: {
+          3: parseInt(mobileSpecialCapullo.value) || 0,
+          4: parseInt(mobileSpecialCapullon.value) || 0,
+          5: parseInt(mobileSpecialTorpe.value) || 0,
+          6: parseInt(mobileSpecialTorpon.value) || 0
+        }
+      };
+      
+      const matchingComp = defaultCompetitions.find(c => c.teams === config.teams && c.components === config.components && c.phases === config.phases && c.id !== 5);
+      if (!matchingComp) {
+        mobileSelectCompetition.value = '5';
+        config.competitionId = 5;
+      }
+      
+      socket.emit('updateConfig', config);
+    }
+  });
+});
+
 // Chat submit message
 chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -726,8 +1076,28 @@ chatForm.addEventListener('submit', (e) => {
   }
 });
 
+// Mobile chat submit
+mobileChatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = mobileChatInput.value.trim();
+  if (text) {
+    socket.emit('chatMessage', text);
+    mobileChatInput.value = '';
+    mobileChatInput.focus();
+    soundEffects.playClick();
+    closeChatPanel();
+  }
+});
+
 // Start Game click (Director only)
 configForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  socket.emit('startGame');
+  soundEffects.playClick();
+});
+
+// Mobile start game
+mobileConfigForm.addEventListener('submit', (e) => {
   e.preventDefault();
   socket.emit('startGame');
   soundEffects.playClick();
@@ -746,6 +1116,33 @@ btnResetGame.addEventListener('click', () => {
   }
 });
 
+// Mobile admin buttons
+mobileBtnForceAuto.addEventListener('click', () => {
+  socket.emit('forceAutoPick');
+  soundEffects.playClick();
+  closePlayersPanel();
+});
+
+mobileBtnResetGame.addEventListener('click', () => {
+  if (confirm('¿Estás seguro de que quieres reiniciar el sorteo? Se perderán todas las asignaciones actuales.')) {
+    socket.emit('resetGame');
+    soundEffects.playClick();
+  }
+  closePlayersPanel();
+});
+
+mobileBtnForceAuto2.addEventListener('click', () => {
+  socket.emit('forceAutoPick');
+  soundEffects.playClick();
+});
+
+mobileBtnResetGame2.addEventListener('click', () => {
+  if (confirm('¿Estás seguro de que quieres reiniciar el sorteo? Se perderán todas las asignaciones actuales.')) {
+    socket.emit('resetGame');
+    soundEffects.playClick();
+  }
+});
+
 btnHostRestart.addEventListener('click', () => {
   socket.emit('resetGame');
   soundEffects.playClick();
@@ -754,4 +1151,15 @@ btnHostRestart.addEventListener('click', () => {
 btnExportCsv.addEventListener('click', () => {
   exportResultsToCSV();
   soundEffects.playClick();
+});
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  const wasMobile = isMobile;
+  const nowMobile = window.innerWidth <= 768;
+  
+  if (wasMobile !== nowMobile) {
+    // Refresh UI if mobile state changed
+    location.reload();
+  }
 });
