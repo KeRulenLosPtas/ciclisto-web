@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ciclisto Draft - Sorteos en Tiempo Real</title>
   <!-- Google Fonts: Outfit & Outfit Bold -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,8 +51,8 @@
     <!-- ==================== GAME LAYOUT (LOBBY / PLAYING / FINISHED) ==================== -->
     <div id="main-layout" class="screen">
       
-      <!-- LEFT SIDEBAR: PLAYERS LIST - Desktop only -->
-      <aside class="sidebar left-sidebar glass-panel desktop-only">
+      <!-- LEFT SIDEBAR: PLAYERS LIST -->
+      <aside class="sidebar left-sidebar glass-panel">
         <div class="sidebar-header">
           <h2>Participantes</h2>
           <span id="player-count-badge" class="badge">0</span>
@@ -83,48 +83,8 @@
       <!-- CENTER PANEL: BOARD / LOBBY CONFIG / RESULTS -->
       <main class="main-content-panel">
         
-        <!-- MOBILE HEADER WITH TOGGLES -->
-        <div class="mobile-header glass-panel mobile-only">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h1><span id="mobile-competition-title">Sorteo Ciclismo</span></h1>
-            <span class="app-version-badge" style="font-size: 0.7rem; font-weight: normal; padding: 2px 6px; background: rgba(255,255,255,0.08); border-radius: 4px; opacity: 0.7;">v1.0.9.1</span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button id="btn-toggle-players" class="mobile-toggle-btn" title="Ver participantes">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <span>Jugadores</span>
-            </button>
-            <button id="btn-toggle-chat" class="mobile-toggle-btn" title="Ver chat">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>Chat</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- MOBILE TURN INFO BAR -->
-        <div class="mobile-turn-info glass-panel mobile-only">
-          <div class="turn-info-left">
-            <span class="turn-label">Turno actual:</span>
-            <span id="mobile-current-turn" class="turn-value">Esperando...</span>
-          </div>
-          <div class="turn-info-right">
-            <span class="last-turn-info">
-              <span class="last-turn-icon">⏎</span>
-              <span class="turn-label">Último:</span>
-              <span id="mobile-last-turn" class="turn-value">-</span>
-            </span>
-          </div>
-        </div>
-
-        <!-- MOBILE TURN BANNER -->
-        <div id="mobile-turn-banner" class="mobile-turn-banner glass-panel mobile-only">
-          <span class="pulse-dot"></span>
-          <span id="mobile-turn-text">Esperando inicio...</span>
-          <span id="mobile-specials-badge" class="specials-badge hidden"></span>
-        </div>
-
-        <!-- STATUS HEAD / TOUR THEME BAR - Desktop only -->
-        <header id="game-header" class="game-status-header glass-panel desktop-only">
+        <!-- STATUS HEAD / TOUR THEME BAR -->
+        <header id="game-header" class="game-status-header glass-panel">
           <div class="status-info">
             <h1 style="display: flex; align-items: center; gap: 8px;"><span id="competition-title">Sorteo Ciclismo</span><span class="app-version-badge" style="font-size: 0.75rem; font-weight: normal; padding: 2px 6px; background: rgba(255,255,255,0.08); border-radius: 4px; opacity: 0.7;">v1.0.9.1</span></h1>
             <p id="game-phase-label" class="subtitle">FASE 1: GREGARIOS Y ESPECIALES</p>
@@ -141,7 +101,7 @@
           <!-- LOBBY SCREEN -->
           <div id="lobby-view" class="view-panel active">
             <!-- HOST CONFIG PANEL -->
-            <div id="host-config-panel" class="config-container glass-panel desktop-only">
+            <div id="host-config-panel" class="config-container glass-panel hidden">
               <h2>Opciones de Creación del Sorteo</h2>
               <form id="config-form">
                 <div class="config-grid">
@@ -198,7 +158,7 @@
                   <h3>Elementos Especiales (Apariciones)</h3>
                   <div class="specials-config-grid">
                     <div class="form-group inline-group">
-                      <label for="special-capullo">🪐 Capullo</label>
+                      <label for="special-capullo">🥀 Capullo</label>
                       <input type="number" id="special-capullo" min="0" max="20" value="4">
                     </div>
                     <div class="form-group inline-group">
@@ -212,86 +172,6 @@
                     <div class="form-group inline-group">
                       <label for="special-torpon">🐢 Torpón</label>
                       <input type="number" id="special-torpon" min="0" max="20" value="1">
-                    </div>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn-primary start-game-btn">Comenzar Sorteo</button>
-              </form>
-            </div>
-
-            <!-- MOBILE HOST CONFIG PANEL -->
-            <div id="mobile-host-config-panel" class="mobile-config-container glass-panel mobile-only hidden">
-              <h2>Opciones de Sorteo</h2>
-              <form id="mobile-config-form">
-                <div class="mobile-config-grid">
-                  <div class="form-group">
-                    <label for="mobile-select-competition">Competición</label>
-                    <select id="mobile-select-competition">
-                      <!-- Loaded dynamically -->
-                    </select>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="mobile-input-teams">Número de Equipos</label>
-                    <input type="number" id="mobile-input-teams" min="1" max="100" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="mobile-input-components">Componentes por Equipo</label>
-                    <input type="number" id="mobile-input-components" min="1" max="50" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="mobile-select-phases">Fases de Sorteo</label>
-                    <select id="mobile-select-phases">
-                      <option value="1">1 Fase (Todo junto)</option>
-                      <option value="2">2 Fases (1: Gregarios, 2: Jefes Fila)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-check-group">
-                  <label class="checkbox-container">
-                    <input type="checkbox" id="mobile-check-multi10" checked>
-                    <span class="checkmark"></span>
-                    Quitar múltiplos de 10
-                  </label>
-                </div>
-
-                <div class="config-accordion-section">
-                  <h3>Exclusiones y Añadidos</h3>
-                  <div class="mobile-config-grid">
-                    <div class="form-group">
-                      <label for="mobile-input-exclusions">Exclusiones</label>
-                      <input type="text" id="mobile-input-exclusions" placeholder="Ej. 13, 44, 71">
-                    </div>
-
-                    <div class="form-group">
-                      <label for="mobile-input-additions">Añadidos</label>
-                      <input type="text" id="mobile-input-additions" placeholder="Ej. 201, 202">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="config-accordion-section">
-                  <h3>Elementos Especiales</h3>
-                  <div class="mobile-specials-grid">
-                    <div class="form-group inline-group">
-                      <label for="mobile-special-capullo">🪐 Capullo</label>
-                      <input type="number" id="mobile-special-capullo" min="0" max="20" value="4">
-                    </div>
-                    <div class="form-group inline-group">
-                      <label for="mobile-special-capullon">🌹 Capullón</label>
-                      <input type="number" id="mobile-special-capullon" min="0" max="20" value="1">
-                    </div>
-                    <div class="form-group inline-group">
-                      <label for="mobile-special-torpe">🐌 Torpe</label>
-                      <input type="number" id="mobile-special-torpe" min="0" max="20" value="4">
-                    </div>
-                    <div class="form-group inline-group">
-                      <label for="mobile-special-torpon">🐢 Torpón</label>
-                      <input type="number" id="mobile-special-torpon" min="0" max="20" value="1">
                     </div>
                   </div>
                 </div>
@@ -321,21 +201,6 @@
                   <li><strong>Fases:</strong> <span id="summary-phases">-</span></li>
                   <li><strong>Múltiplos de 10:</strong> <span id="summary-multi10">-</span></li>
                 </ul>
-              </div>
-            </div>
-
-            <!-- MOBILE DIRECTOR CONTROLS IN LOBBY -->
-            <div id="mobile-director-controls" class="mobile-director-controls glass-panel mobile-only hidden">
-              <h3>Controles de Director</h3>
-              <div class="mobile-admin-buttons">
-                <button id="mobile-btn-force-auto" class="btn-secondary" title="Fuerza una selección aleatoria">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                  Auto-pick
-                </button>
-                <button id="mobile-btn-reset-game" class="btn-danger" title="Reiniciar sorteo">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8m0 0V2m0 6h-6M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v6m0-6h6"/></svg>
-                  Reiniciar
-                </button>
               </div>
             </div>
           </div>
@@ -374,8 +239,8 @@
         </div>
       </main>
 
-      <!-- RIGHT SIDEBAR: CHAT & LOGS - Desktop only -->
-      <aside class="sidebar right-sidebar glass-panel desktop-only">
+      <!-- RIGHT SIDEBAR: CHAT & LOGS -->
+      <aside class="sidebar right-sidebar glass-panel">
         <div class="sidebar-header">
           <h2>Chat y Actividad</h2>
         </div>
@@ -391,54 +256,6 @@
           </button>
         </form>
       </aside>
-
-      <!-- MOBILE SIDEBAR PANELS -->
-      
-      <!-- Mobile Players Panel -->
-      <div id="mobile-players-panel" class="mobile-sidebar-panel">
-        <div class="mobile-sidebar-content">
-          <div class="mobile-sidebar-header">
-            <h2>Participantes</h2>
-            <span id="mobile-player-count-badge" class="badge">0</span>
-            <button class="mobile-close-btn" id="mobile-close-players">&times;</button>
-          </div>
-          <div id="mobile-players-list" class="mobile-players-list">
-            <!-- Rendered dynamically -->
-          </div>
-          <div id="mobile-director-controls-panel" class="mobile-admin-panel hidden">
-            <h3>Controles de Director</h3>
-            <div class="mobile-admin-buttons">
-              <button id="mobile-btn-force-auto-2" class="btn-secondary" title="Fuerza una selección aleatoria">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                Auto-pick Turno
-              </button>
-              <button id="mobile-btn-reset-game-2" class="btn-danger" title="Reiniciar sorteo">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8m0 0V2m0 6h-6M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v6m0-6h6"/></svg>
-                Reiniciar Sorteo
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mobile Chat Panel -->
-      <div id="mobile-chat-panel" class="mobile-sidebar-panel">
-        <div class="mobile-sidebar-content">
-          <div class="mobile-sidebar-header">
-            <h2>Chat y Actividad</h2>
-            <button class="mobile-close-btn" id="mobile-close-chat">&times;</button>
-          </div>
-          <div id="mobile-chat-logs-container" class="mobile-chat-logs">
-            <!-- Live chat messages and system logs -->
-          </div>
-          <form id="mobile-chat-form" class="mobile-chat-input">
-            <input type="text" id="mobile-chat-input" placeholder="Escribe un mensaje..." required autocomplete="off">
-            <button type="submit" class="btn-send">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </form>
-        </div>
-      </div>
 
     </div>
   </div>
