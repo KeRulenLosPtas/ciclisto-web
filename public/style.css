@@ -1088,3 +1088,102 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* ==================== MOBILE COMPACT MODE ==================== */
+@media (max-width: 768px) {
+  body {
+    overflow-y: auto;
+  }
+  
+  .app-container {
+    padding: 8px;
+  }
+
+  #main-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .left-sidebar, .right-sidebar {
+    display: none; /* Ocultamos por defecto en móvil */
+  }
+
+  .main-content-panel {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* Tarjetas más compactas */
+  :root {
+    --card-width: 55px;
+    --card-height: 78px;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important;
+    gap: 8px;
+    padding: 12px;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+
+  .card-container {
+    width: 100%;
+    max-width: 65px;
+  }
+
+  .card {
+    height: 78px;
+    font-size: 0.75rem;
+  }
+
+  .card-front-num {
+    font-size: 1.1rem;
+  }
+
+  /* Barra persistente de estado en móvil */
+  #mobile-status-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+
+  .turn-info-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,215,0,0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+
+  /* Botón flotante para chat */
+  #mobile-chat-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 200;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: #020617;
+    border: none;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .glass-panel {
+    border-radius: 12px;
+  }
+}
