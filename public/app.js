@@ -66,6 +66,12 @@ let defaultCompetitions = [];
 let localConfig = {};
 let accumulatedSpecials = '';
 
+// Mobile detection y elementos
+const isMobile = () => window.innerWidth <= 768;
+const mobileStatusBar = document.getElementById('mobile-status-bar');
+const lastTurnMobile = document.getElementById('last-turn-mobile');
+const currentTurnMobile = document.getElementById('current-turn-mobile');
+
 // ==================== WEB AUDIO SYNTH EFFECTS ====================
 const soundEffects = {
   ctx: null,
@@ -565,6 +571,14 @@ function updateTurnBannerUI() {
     specialsBadge.classList.remove('hidden');
   } else {
     specialsBadge.classList.add('hidden');
+  }
+
+  if (isMobile() && mobileStatusBar) {
+    mobileStatusBar.classList.remove('hidden');
+    // Lógica para mostrar último y actual turno (usa currentTurnOrder y currentTurnIndex)
+    const currentPlayer = currentTurnOrder[currentTurnIndex];
+    currentTurnMobile.textContent = currentPlayer || 'Esperando...';
+    // Último turno: puedes guardar una variable lastTurnPlayer
   }
 }
 
