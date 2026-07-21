@@ -383,33 +383,6 @@ body {
   justify-content: space-between;
 }
 
-.player-row-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-remove-player {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: var(--danger);
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  padding: 2px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.btn-remove-player:hover {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(239, 68, 68, 0.5);
-  transform: scale(1.1);
-}
-
 .player-info-meta {
   display: flex;
   align-items: center;
@@ -1082,328 +1055,36 @@ body {
 }
 
 /* ==================== RESPONSIVE MEDIA QUERIES ==================== */
-
-/* Tablet - 1024px and down */
 @media (max-width: 1024px) {
   #main-layout {
-    grid-template-columns: 220px 1fr;
-    grid-template-rows: 1fr 180px;
-    gap: 12px;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 1fr 200px;
     height: 100vh;
   }
   
   .right-sidebar {
     grid-column: 1 / 3;
-    height: 180px;
-  }
-  
-  .specials-config-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .cards-grid {
-    gap: 10px;
-    padding: 8px;
+    height: 200px;
   }
 }
 
-/* Mobile - 768px and down */
 @media (max-width: 768px) {
-  body {
-    overflow: hidden;
-  }
-  
-  .app-container {
-    padding: 8px;
-  }
-  
   #main-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
-    height: 100vh;
-    gap: 8px;
+    height: auto;
+    overflow-y: auto;
   }
   
   .left-sidebar {
-    display: flex;
-    order: -1;
-    height: auto;
-    max-height: 35vh;
-    padding: 0;
-    padding-top: 12px;
-  }
-  
-  .sidebar-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--panel-border);
-  }
-  
-  .sidebar-header h2 {
-    font-size: 1rem;
-  }
-  
-  .players-list-container {
-    padding: 8px 12px;
-    gap: 6px;
-  }
-  
-  .player-item {
-    padding: 8px 10px;
-    font-size: 0.85rem;
-  }
-  
-  .player-name {
-    font-size: 0.85rem;
-  }
-  
-  .player-pseudonym {
-    font-size: 0.75rem;
+    display: none; /* simple toggle later */
   }
   
   .right-sidebar {
-    height: 35vh;
-    order: 3;
-  }
-  
-  .main-content-panel {
-    order: 2;
-    min-height: 0;
-  }
-  
-  .game-status-header {
-    padding: 12px 16px;
-  }
-  
-  .game-status-header h1 {
-    font-size: 1.3rem;
-  }
-  
-  .game-status-header .subtitle {
-    font-size: 0.75rem;
-  }
-  
-  /* Reduce card size on mobile */
-  :root {
-    --card-width: 55px;
-    --card-height: 80px;
-  }
-  
-  .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
-    gap: 6px;
-    padding: 6px;
-  }
-  
-  .card-front-num {
-    font-size: 0.95rem;
-  }
-  
-  .card-front-label {
-    font-size: 0.45rem;
-  }
-  
-  .card-front-icon {
-    margin-bottom: 2px;
-  }
-  
-  /* Reduce font sizes in forms */
-  .form-group label {
-    font-size: 0.75rem;
-  }
-  
-  .form-group input, 
-  .form-group select {
-    padding: 10px 12px;
-    font-size: 0.9rem;
-  }
-  
-  .config-container {
-    padding: 20px;
-  }
-  
-  .config-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    height: 250px;
   }
   
   .specials-config-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  
-  .inline-group {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .inline-group input {
-    width: 100%;
-  }
-  
-  /* Login card responsive */
-  .login-card {
-    padding: 24px;
-    max-width: 100%;
-  }
-  
-  .logo-container h1 {
-    font-size: 1.7rem;
-  }
-  
-  .logo-container .subtitle {
-    font-size: 0.85rem;
-  }
-  
-  /* Chat area responsive */
-  .chat-logs-area {
-    max-height: 20vh;
-    overflow-y: auto;
-  }
-  
-  .chat-input-panel {
-    padding: 8px;
-    gap: 6px;
-  }
-  
-  .chat-input-panel input {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-  }
-  
-  .btn-send {
-    padding: 8px 10px;
-  }
-  
-  /* Results view mobile */
-  #results-view {
-    padding: 16px;
-    max-width: 100%;
-  }
-  
-  .results-celebration h2 {
-    font-size: 1.3rem;
-  }
-  
-  .results-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .result-card {
-    padding: 12px;
-  }
-  
-  .result-card-header h3 {
-    font-size: 0.9rem;
-  }
-  
-  .result-tag {
-    font-size: 0.7rem;
-    padding: 2px 4px;
-  }
-  
-  /* Admin controls mobile */
-  .admin-controls-panel {
-    padding: 12px;
-  }
-  
-  .admin-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .admin-buttons button {
-    width: 100%;
-    font-size: 0.8rem;
-    padding: 8px 10px;
-  }
-  
-  /* Buttons responsive */
-  .btn-primary {
-    padding: 10px 16px;
-    font-size: 0.9rem;
-  }
-  
-  .btn-secondary, .btn-danger {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .results-footer-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .results-footer-actions button {
-    width: 100%;
-    min-width: unset;
-  }
-}
-
-/* Extra small - 480px and down */
-@media (max-width: 480px) {
-  :root {
-    --card-width: 48px;
-    --card-height: 70px;
-  }
-  
-  .logo-container h1 {
-    font-size: 1.4rem;
-  }
-  
-  .game-status-header h1 {
-    font-size: 1.1rem;
-  }
-  
-  .game-status-header .subtitle {
-    font-size: 0.7rem;
-  }
-  
-  .sidebar-header h2 {
-    font-size: 0.9rem;
-  }
-  
-  .badge {
-    font-size: 0.7rem;
-  }
-  
-  .card-front-num {
-    font-size: 0.85rem;
-  }
-  
-  .card-front-label {
-    font-size: 0.4rem;
-  }
-  
-  .form-group label {
-    font-size: 0.7rem;
-  }
-  
-  .help-text {
-    font-size: 0.7rem;
-  }
-  
-  .player-item {
-    padding: 6px 8px;
-    font-size: 0.75rem;
-  }
-  
-  .cards-grid {
-    gap: 4px;
-    padding: 4px;
-  }
-  
-  .login-card {
-    padding: 16px;
-  }
-  
-  .turn-banner {
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 12px;
-  }
-  
-  #turn-text {
-    font-size: 0.8rem;
   }
 }

@@ -118,6 +118,15 @@ function getRiderTypeLetter(type) {
   }
 }
 
+// Helper: Shuffle array in place
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 // Generate the draft items
 function generateItems(config) {
   let totalRiders = config.teams * config.components;
@@ -136,6 +145,9 @@ function generateItems(config) {
     const exc = config.exclusions.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
     pool = pool.filter(n => !exc.includes(n));
   }
+
+  // Shuffle pool to ensure random order of base runners
+  shuffle(pool);
 
   // Añadidos (comma-separated list of numbers)
   if (config.additions) {
@@ -566,29 +578,6 @@ io.on('connection', (socket) => {
       players: gameState.players,
       config: gameState.config
     });
-  });
-
-  // Director removes a player
-  socket.on('removePlayer', (pseudonymToRemove) => {
-    const hostPlayer = gameState.players.find(p => p.socketId === socket.id);
-    if (!hostPlayer || hostPlayer.role !== 'director') return;
-
-    const playerIndex = gameState.players.findIndex(p => p.pseudonym.toLowerCase() === pseudonymToRemove.toLowerCase());
-    if (playerIndex === -1) return;
-
-    const removedPlayer = gameState.players[playerIndex];
-    gameState.players.splice(playerIndex, 1);
-
-    addLog(`${removedPlayer.name} (@${removedPlayer.pseudonym}) ha sido eliminado por el Director.`, 'system');
-
-    // Broadcast updated player list
-    io.emit('playersUpdate', gameState.players.map(p => ({
-      name: p.name,
-      pseudonym: p.pseudonym,
-      active: p.active,
-      role: p.role,
-      chosen: p.chosen
-    })));
   });
 
   socket.on('disconnect', () => {

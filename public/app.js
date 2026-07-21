@@ -65,7 +65,6 @@ let currentTurnIndex = 0;
 let defaultCompetitions = [];
 let localConfig = {};
 let accumulatedSpecials = '';
-let cardDisplayNumbers = {}; // Maps card index to random display number
 
 // ==================== WEB AUDIO SYNTH EFFECTS ====================
 const soundEffects = {
@@ -211,22 +210,6 @@ function getRiderType(dorsal) {
   }
 }
 
-// Generate random display numbers for cards (randomized each game)
-function generateRandomCardNumbers(boardLength) {
-  cardDisplayNumbers = {};
-  const usedNumbers = new Set();
-  
-  for (let i = 0; i < boardLength; i++) {
-    let randomNum;
-    do {
-      randomNum = Math.floor(Math.random() * 999) + 1; // Random 1-999
-    } while (usedNumbers.has(randomNum));
-    
-    usedNumbers.add(randomNum);
-    cardDisplayNumbers[i] = randomNum;
-  }
-}
-
 
 // ==================== SOCKET.IO RECEIVERS ====================
 
@@ -329,7 +312,6 @@ socket.on('gameStarted', (data) => {
   currentTurnIndex = data.currentTurnIndex;
   accumulatedSpecials = '';
   gameStateUpdate('PLAYING');
-  generateRandomCardNumbers(data.board.length); // Generate random display numbers
   renderBoard(data.board);
   updateTurnBannerUI();
   soundEffects.playSpecial(); // shiny chime to start
@@ -492,14 +474,7 @@ function updatePlayersUI(players) {
           <span class="player-name">${p.name} ${isMe ? '<span style="color:var(--accent-color)">(Tú)</span>' : ''}</span>
           <span class="player-pseudonym">@${p.pseudonym}</span>
         </div>
-        <div class="player-row-actions">
-          <span class="player-count">(${p.chosen ? p.chosen.filter(item => item.type === 'gregario' || item.type === 'jefefila').length : 0})</span>
-          ${me && me.role === 'director' && p.pseudonym !== me.pseudonym ? `
-            <button class="btn-remove-player" data-pseudonym="${p.pseudonym}" title="Eliminar jugador">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          ` : ''}
-        </div>
+        <span class="player-count">(${p.chosen ? p.chosen.filter(item => item.type === 'gregario' || item.type === 'jefefila').length : 0})</span>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
         <span class="player-role-badge ${p.role === 'director' ? 'director' : ''}">${p.role === 'director' ? 'Director' : 'Jugador'}</span>
@@ -508,18 +483,6 @@ function updatePlayersUI(players) {
       ${chosenLabels ? `<div class="player-drafted-list"><strong>Asignados:</strong> ${chosenLabels}</div>` : ''}
     `;
     playersList.appendChild(playerCard);
-    
-    // Add event listener for remove button
-    const removeBtn = playerCard.querySelector('.btn-remove-player');
-    if (removeBtn) {
-      removeBtn.addEventListener('click', () => {
-        const pseudonym = removeBtn.getAttribute('data-pseudonym');
-        if (confirm(`¿Estás seguro de que quieres eliminar a ${p.name}?`)) {
-          socket.emit('removePlayer', pseudonym);
-          soundEffects.playClick();
-        }
-      });
-    }
   });
 }
 
@@ -551,10 +514,9 @@ function renderBoard(board) {
     const cardFront = document.createElement('div');
     if (item.discovered) {
       cardFront.className = `card-face card-front ${item.type}`;
-      const displayNum = item.dorsal > 10000 ? '' : (cardDisplayNumbers[item.index] || item.dorsal);
       cardFront.innerHTML = `
         ${getIconSvg(item.type)}
-        <div class="card-front-num">${displayNum}</div>
+        <div class="card-front-num">${item.dorsal > 10000 ? '' : item.dorsal}</div>
         <div class="card-front-label">${getRiderTypeStr(item.type)}</div>
       `;
     } else {
